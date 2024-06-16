@@ -7,7 +7,11 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 //  middleware
-app.use(cors());
+app.use(cors({
+    origin: 'https://bistro-restaurant-f5ef2.web.app', // Replace with your client's origin
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+}));
 app.use(express.json());
 
 
@@ -29,7 +33,7 @@ async function run() {
     try {
 
 
-        await client.connect();
+        // await client.connect();
         console.log('runign database')
         const userCollection = client.db("bistro-restaurant").collection("user")
         const menuCollection = client.db("bistro-restaurant").collection("menu")
@@ -276,17 +280,84 @@ async function run() {
             res.send({ paymentResult, deleteResult });
         })
 
-        app.get('/admin-stats', async (req, res) => {
-            const users = await userCollection.estimatedDocumentCount();
-            const menuItems = await menuCollection.estimatedDocumentCount()
-            const order = await paymentCollection.estimatedDocumentCount()
-            const
-                res.send({
-                    users,
-                    menuItems, order
-                })
 
+
+
+
+        // using aggregate pipeline
+
+        app.get('/order-stats', async (req, res) => {
+            const result = await paymentCollection.aggregate([
+                {
+                    $unwind: '$menuItemIds'
+                },
+                {
+                    $lookup: {
+                        from: 'menu',
+                        localField: 'menuItemIds',
+                        foreignField: '_id',
+                        as: 'menuItems'
+                    }
+                },
+                {
+                    $unwind: '$menuItems'
+                },
+                {
+                    $group: {
+                        _id: '$menuItems.category',
+                        quantity: { $sum: 1 },
+                        revenue: { $sum: '$menuItems.price' }
+
+                    }
+
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        category: "$_id",
+                        quantity: '$quantity'
+                    }
+                }
+
+            ]).toArray()
+
+            res.send(result)
         })
+
+
+        // stats or analytics
+
+
+        app.get('/admin-stats', verifyToken, verifyAdmin, async (req, res) => {
+            const users = await userCollection.estimatedDocumentCount();
+            const menuItems = await menuCollection.estimatedDocumentCount();
+            const orders = await paymentCollection.estimatedDocumentCount();
+
+            // this is not the best way
+            // const payments = await paymentCollection.find().toArray();
+            // const revenue = payments.reduce((total, payment) => total + payment.price, 0);
+
+            const result = await paymentCollection.aggregate([
+                {
+                    $group: {
+                        _id: null,
+                        totalRevenue: {
+                            $sum: '$price'
+                        }
+                    }
+                }
+            ]).toArray();
+
+            const revenue = result.length > 0 ? result[0].totalRevenue : 0;
+
+            res.send({
+                users,
+                menuItems,
+                orders,
+                revenue
+            })
+        })
+
 
     } finally {
 
