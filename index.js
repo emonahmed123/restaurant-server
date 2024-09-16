@@ -2,6 +2,14 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const formData = require('form-data');
+const Mailgun = require('mailgun.js');
+const mailgun = new Mailgun(formData)
+
+const mg = mailgun.client({
+    username: 'api',
+    key: '74a9e7edcd79ac79bda8f3cbad87bae7-51356527-8e1eb9bd'
+})
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
@@ -9,6 +17,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 //  middleware
 app.use(cors({
     origin: 'https://bistro-restaurant-f5ef2.web.app', // Replace with your client's origin
+    origin: 'http://localhost:5173', // Replace with your client's origin
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
 }));
@@ -33,10 +42,11 @@ async function run() {
     try {
 
 
-        // await client.connect();
+        await client.connect();
         console.log('runign database')
         const userCollection = client.db("bistro-restaurant").collection("user")
         const menuCollection = client.db("bistro-restaurant").collection("menu")
+        const projectCollection = client.db("bistro-restaurant").collection("project")
         const reviewCollection = client.db("bistro-restaurant").collection("review")
         const cartCollection = client.db("bistro-restaurant").collection("cart")
         const paymentCollection = client.db("bistro-restaurant").collection("payments")
@@ -155,26 +165,26 @@ async function run() {
         })
 
 
-        app.get('/menu', async (req, res) => {
+        app.get('/project', async (req, res) => {
 
-            const result = await menuCollection.find().toArray();
+            const result = await projectCollection.find().toArray();
             res.send(result)
         })
 
-        app.get('/menu/:id', async (req, res) => {
+        app.get('/project/:id', async (req, res) => {
             const id = req.params._id;
             console.log(id)
             const query = { _id: new ObjectId(id) }
-            const result = await menuCollection.findOne(id);
+            const result = await projectCollection.findOne(id);
             console.log(result)
 
             res.send(result);
         })
 
-        app.post('/menu', verifyToken, verifyAdmin, async (req, res) => {
+        app.post('/project', verifyToken, verifyAdmin, async (req, res) => {
 
             const item = req.body;
-            const result = await menuCollection.insertOne(item)
+            const result = await projectCollection.insertOne(item)
             res.send(result)
         })
 
@@ -277,6 +287,15 @@ async function run() {
 
             const deleteResult = await cartCollection.deleteMany(query);
 
+            mg.messages.create('sandbox7b499d06bc1e49f69c2b1d17b872db79.mailgun.org', {
+                from: "Excited User <postmaster@sandbox7b499d06bc1e49f69c2b1d17b872db79.mailgun.org>",
+                to: ["test@example.com"],
+                subject: "Hello",
+                text: "Testing some Mailgun awesomeness!",
+                html: "<h1>Testing some Mailgun awesomeness!</h1>"
+            })
+                .then(msg => console.log(msg)) // logs response data
+                .catch(err => console.log(err));
             res.send({ paymentResult, deleteResult });
         })
 
