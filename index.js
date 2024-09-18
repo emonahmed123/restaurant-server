@@ -15,12 +15,14 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 //  middleware
-app.use(cors({
-    origin: 'https://bistro-restaurant-f5ef2.web.app', // Replace with your client's origin
-    origin: 'http://localhost:5173', // Replace with your client's origin
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-}));
+
+// {
+//     origin: 'https://bistro-restaurant-f5ef2.web.app', // Replace with your client's origin
+//     origin: 'http://localhost:5173', // Replace with your client's origin
+//     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+//     credentials: true,
+// }
+app.use(cors());
 app.use(express.json());
 
 
