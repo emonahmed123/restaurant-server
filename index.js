@@ -18,7 +18,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 
 app.use(cors({
-    origin: 'https://my-new-protfolio.vercel.app', // Replace with your client's origin
+    origin: 'https://my-new-protfolio.vercel.app',
     origin: 'http://localhost:3000',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
