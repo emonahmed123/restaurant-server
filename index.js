@@ -175,7 +175,7 @@ async function run() {
 
         app.get('/project/:id', async (req, res) => {
             const id = req.params.id
-            console.log(id, 'mew')
+
             const query = { _id: new ObjectId(id) }
             const result = await projectCollection.findOne(query);
             console.log(result)
@@ -190,33 +190,33 @@ async function run() {
             res.send(result)
         })
 
-        app.patch('/menu/:id', async (req, res) => {
-            const item = req.body;
-            const id = req.params._id;
-            const filter = { _id: new ObjectId(id) }
-            const updatedDoc = {
-                $set: {
-                    name: item.name,
-                    category: item.category,
-                    price: item.price,
-                    recipe: item.recipe,
-                    image: item.image
-                }
-            }
+        // app.patch('/menu/:id', async (req, res) => {
+        //     const item = req.body;
+        //     const id = req.params._id;
+        //     const filter = { _id: new ObjectId(id) }
+        //     const updatedDoc = {
+        //         $set: {
+        //             name: item.name,
+        //             category: item.category,
+        //             price: item.price,
+        //             recipe: item.recipe,
+        //             image: item.image
+        //         }
+        //     }
 
-            const result = await menuCollection.updateOne({ id }, updatedDoc)
-            res.send(result);
-        })
+        //     const result = await menuCollection.updateOne({ id }, updatedDoc)
+        //     res.send(result);
+        // })
 
-        app.delete('/menu/:id', verifyToken, verifyAdmin, async (req, res) => {
-            // 642c155b2c4774f05c36eeaa
-            // 642c155b2c4774f05c36eeaa
-            const id = req.params._id;
-            const result = await menuCollection.deleteOne(id)
+        // app.delete('/menu/:id', verifyToken, verifyAdmin, async (req, res) => {
+        //     // 642c155b2c4774f05c36eeaa
+        //     // 642c155b2c4774f05c36eeaa
+        //     const id = req.params._id;
+        //     const result = await menuCollection.deleteOne(id)
 
-            res.send(result)
+        //     res.send(result)
 
-        })
+        // })
         app.get('/reviews', async (req, res) => {
 
             const result = await reviewCollection.find().toArray();
